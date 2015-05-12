@@ -51,6 +51,7 @@ module.exports.routes = {
 
     /* USER ROUTES */
     'PUT /user': 'UserController.create',
+    'POST /user/:email/reset-validation-token': 'UserController.resetValidationToken',
     'POST /user/:email/change-password': 'UserController.changePassword',
     'POST /user/:email/validate': 'UserController.validate',
     'POST /user/:email/authenticate': 'UserController.authenticate',

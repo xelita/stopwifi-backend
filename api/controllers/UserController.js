@@ -10,7 +10,7 @@ var bcrypt = require('bcrypt');
 module.exports = {
 
     /**
-     * Create a new user.s
+     * Create a new user.
      * @param req
      * @param res
      */
@@ -28,7 +28,7 @@ module.exports = {
             email: email,
             password: password,
             passwordConfirmation: passwordConfirmation
-        }).then(function (err, user) {
+        }).exec(function (err, user) {
             // On error
             if (err) {
                 return res.serverError(err);
@@ -43,7 +43,50 @@ module.exports = {
                 text: 'Bienvenue sur StopWifi!. Voici votre code de validation à entrer dans l\'application StopWifi:' + user.token + ' Merci de ne pas répondre à cet email.',
                 from_email: 'stopwifi@furiousapps.fr',
                 fromName: 'stopwifi notifier engine',
-                to: [{email: 'benjamin.sempere@gmail.com'}]
+                to: [{email: email}]
+            };
+
+            // Sending the email
+            MailService.sendMail(message, function (result) {
+                // returning result
+                return res.json(user);
+            }, function (error) {
+                // Mandrill returns the error as an object with name and message keys
+                // A mandrill error occurred: Unknown_Subaccount - No subaccount exists with the id 'customer-123'
+                console.error('A mandrill error occurred: ' + e.name + ' - ' + e.message);
+                return res.json(user);
+            });
+        });
+    },
+
+    /**
+     * Reset a validation token for a specific user.
+     * @param req
+     * @param res
+     */
+    resetValidationToken: function (req, res) {
+        // Extract information
+        var email = req.param('email');
+
+        // Create the user and send validation code
+        User.findOne({
+            email: email
+        }).exec(function (err, user) {
+            // On error
+            if (err) {
+                return res.serverError(err);
+            }
+
+            // A validation token has been generated and need to be sent by email!
+
+            // Configuring the message
+            message = {
+                subject: 'StopWifi - Votre compte doit être validé',
+                html: '<p>Bienvenue sur StopWifi!</p><p>Voici votre code de validation à entrer dans l\'application StopWifi:</p><strong>' + user.token + '</strong><p>Merci de ne pas répondre à cet email.</p>',
+                text: 'Bienvenue sur StopWifi!. Voici votre code de validation à entrer dans l\'application StopWifi:' + user.token + ' Merci de ne pas répondre à cet email.',
+                from_email: 'stopwifi@furiousapps.fr',
+                fromName: 'stopwifi notifier engine',
+                to: [{email: email}]
             };
 
             // Sending the email
@@ -187,7 +230,7 @@ module.exports = {
                 }
 
                 // returning result
-                return hash == user.password ? res.json(user) : res.json({});
+                return hash == user.password ? res.json(user) : res.notFound();
             });
         });
     },
