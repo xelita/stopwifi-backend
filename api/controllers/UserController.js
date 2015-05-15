@@ -6,6 +6,7 @@
  */
 
 var bcrypt = require('bcrypt');
+var crypto = require('crypto');
 
 module.exports = {
 
@@ -68,13 +69,18 @@ module.exports = {
         // Extract information
         var email = req.param('email');
 
-        // Create the user and send validation code
+        // Find the user and send validation code
         User.findOne({
             email: email
         }).exec(function (err, user) {
             // On error
             if (err) {
                 return res.serverError(err);
+            }
+
+            // No user matching the given criteria was found
+            if (!user) {
+                return res.notFound();
             }
 
             // A validation token has been generated and need to be sent by email!
@@ -99,6 +105,86 @@ module.exports = {
                 console.error('A mandrill error occurred: ' + e.name + ' - ' + e.message);
                 return res.json(user);
             });
+        });
+    },
+
+    /**
+     * Reset a password token for a specific user.
+     * @param req
+     * @param res
+     */
+    resetPasswordToken: function (req, res) {
+        // Extract information
+        var email = req.param('email');
+
+        // A password token has been generated and need to be sent by email!
+        var token = crypto.randomBytes(4).toString('hex');
+
+        // Find the user and set his reset password token
+        User.update({email: email}, {passwordToken: token}).exec(function (err, users) {
+            // On error
+            if (err) {
+                return res.serverError(err);
+            }
+
+            // No user matching the given criteria was found
+            if (!users || users.length == 0) {
+                return res.notFound();
+            }
+
+            // Configuring the message
+            var user = users[0];
+            message = {
+                subject: 'StopWifi - Votre demande de changement de mot de passe',
+                html: '<p>Bienvenue sur StopWifi!</p><p>Voici le code à saisir afin de changer votre mot de passe à l\'application StopWifi:</p><strong>' + user.passwordToken + '</strong><p>Merci de ne pas répondre à cet email.</p>',
+                text: 'Bienvenue sur StopWifi!. Voici le code à saisir afin de changer votre mot de passe à l\'application StopWifi:' + user.passwordToken + ' Merci de ne pas répondre à cet email.',
+                from_email: 'stopwifi@furiousapps.fr',
+                fromName: 'stopwifi notifier engine',
+                to: [{email: email}]
+            };
+
+            // Sending the email
+            MailService.sendMail(message, function (result) {
+                // returning result
+                return res.json(user);
+            }, function (error) {
+                // Mandrill returns the error as an object with name and message keys
+                // A mandrill error occurred: Unknown_Subaccount - No subaccount exists with the id 'customer-123'
+                console.error('A mandrill error occurred: ' + e.name + ' - ' + e.message);
+                return res.json(user);
+            });
+        });
+    },
+
+    /**
+     * Send the user password.
+     * @param req
+     * @param res
+     */
+    resetPassword: function (req, res) {
+        // Payload
+        var data = req.body;
+
+        // Extract information
+        var email = data.email;
+        var passwordToken = data.passwordToken;
+        var password = data.password;
+        var passwordConfirmation = data.passwordConfirmation;
+
+        // Find the user and send his password
+        User.update({email: email, passwordToken: passwordToken}, {password: password, passwordConfirmation: passwordConfirmation}).exec(function (err, users) {
+            // On error
+            if (err) {
+                return res.serverError(err);
+            }
+
+            // No user matching the given criteria was found
+            if (!users || users.length == 0) {
+                return res.notFound();
+            }
+
+            // Configuring the message
+            res.json(users[0]);
         });
     },
 
