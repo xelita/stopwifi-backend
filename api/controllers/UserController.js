@@ -166,7 +166,7 @@ module.exports = {
         var data = req.body;
 
         // Extract information
-        var email = data.email;
+        var email = req.param('email');
         var passwordToken = data.passwordToken;
         var password = data.password;
         var passwordConfirmation = data.passwordConfirmation;

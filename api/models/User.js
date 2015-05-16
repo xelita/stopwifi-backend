@@ -99,17 +99,43 @@ module.exports = {
      * @param cb callback
      */
     beforeCreate: function (values, cb) {
-        // Encrypt password before user creation
-        bcrypt.hash(values.password, values.salt, function (err, hash) {
-            if (err) return cb(err);
+        // Case of creation only
+        if (values.passwordConfirmation) {
+            // Encrypt password before user creation
+            bcrypt.hash(values.password, values.salt, function (err, hash) {
+                if (err) return cb(err);
 
-            // Store the encrypted passwords
-            values.password = hash;
-            values.passwordConfirmation = hash;
+                // Store the encrypted passwords
+                values.password = hash;
+                values.passwordConfirmation = hash;
 
-            //calling cb() with an argument returns an error. Useful for canceling the entire operation if some criteria fails.
-            cb();
-        });
-    }
+                //calling cb() with an argument returns an error. Useful for canceling the entire operation if some criteria fails.
+                cb();
+            });            
+        }        
+    },
+
+    /**
+     * Callback invoked before a user is updated.
+     *
+     * @param values model attributes
+     * @param cb callback
+     */
+    beforeUpdate: function (values, cb) {
+        // Case of creation only
+        if (values.passwordConfirmation) {
+            // Encrypt password before user creation
+            bcrypt.hash(values.password, values.salt, function (err, hash) {
+                if (err) return cb(err);
+
+                // Store the encrypted passwords
+                values.password = hash;
+                values.passwordConfirmation = hash;
+
+                //calling cb() with an argument returns an error. Useful for canceling the entire operation if some criteria fails.
+                cb();
+            });            
+        }
+    },
 };
 
