@@ -112,7 +112,10 @@ module.exports = {
                 //calling cb() with an argument returns an error. Useful for canceling the entire operation if some criteria fails.
                 cb();
             });            
-        }        
+        } else {
+            //calling cb() with an argument returns an error. Useful for canceling the entire operation if some criteria fails.
+            cb();
+        }       
     },
 
     /**
@@ -135,7 +138,10 @@ module.exports = {
                 //calling cb() with an argument returns an error. Useful for canceling the entire operation if some criteria fails.
                 cb();
             });            
-        }
+        } else {
+            //calling cb() with an argument returns an error. Useful for canceling the entire operation if some criteria fails.
+            cb();
+        }   
     },
 };
 
